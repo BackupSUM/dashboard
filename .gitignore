@@ -143,6 +143,12 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+dash/
+# Remove this: dash/   (was your local env, not needed anymore)
+
+# Ignore all JSON files (user data, configs, etc.)
+*.json
+
 
 # Spyder project settings
 .spyderproject

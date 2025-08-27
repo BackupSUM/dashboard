@@ -5,16 +5,26 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, List
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from dotenv import load_dotenv
 
-# Configuration
-SECRET_KEY = "your-secret-key-change-this-in-production-make-it-very-long-and-random"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-USERS_FILE = "users.json"
-SESSIONS_FILE = "sessions.json"
+# Load environment variables
+load_dotenv()
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Configuration from environment variables
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key-change-this")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+SESSION_EXPIRE_DAYS = int(os.getenv("SESSION_EXPIRE_DAYS", "30"))
+USERS_FILE = os.getenv("USERS_FILE", "users.json")
+SESSIONS_FILE = os.getenv("SESSIONS_FILE", "sessions.json")
+BCRYPT_ROUNDS = int(os.getenv("BCRYPT_ROUNDS", "12"))
+
+# Password hashing with configurable rounds
+pwd_context = CryptContext(
+    schemes=["bcrypt"], 
+    deprecated="auto",
+    bcrypt__rounds=BCRYPT_ROUNDS
+)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""
@@ -152,16 +162,15 @@ def update_user_selection(username: str, company: str = None, type_selection: st
         if user.get('username') == username:
             if company is not None:
                 users[i]['last_company'] = company
-                # print(f"DEBUG: Updated user {username} company to: {company}")
+                print(f"DEBUG: Updated user {username} company to: {company}")
             if type_selection is not None:
                 users[i]['last_type'] = type_selection
-                # print(f"DEBUG: Updated user {username} type to: {type_selection}")
+                print(f"DEBUG: Updated user {username} type to: {type_selection}")
             save_users(users)
-            # print(f"DEBUG: User {username} current state: company={users[i].get('last_company')}, type={users[i].get('last_type')}")
-            
+            print(f"DEBUG: User {username} current state: company={users[i].get('last_company')}, type={users[i].get('last_type')}")
             return True
     
-    # print(f"DEBUG: User {username} not found for update")
+    print(f"DEBUG: User {username} not found for update")
     return False
 
 def get_user_selections(username: str) -> Dict:
@@ -187,7 +196,7 @@ def create_session(username: str) -> str:
     sessions[session_id] = {
         "username": username,
         "created_at": datetime.utcnow().isoformat(),
-        "expires_at": (datetime.utcnow() + timedelta(days=30)).isoformat(),
+        "expires_at": (datetime.utcnow() + timedelta(days=SESSION_EXPIRE_DAYS)).isoformat(),
         "last_accessed": datetime.utcnow().isoformat()
     }
     

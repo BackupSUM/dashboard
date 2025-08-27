@@ -5,7 +5,7 @@ from datetime import timedelta
 import re
 from utils import (
     create_user, 
-    authenticate_user,  
+    authenticate_user, 
     create_access_token, 
     verify_token,
     update_user_selection,
@@ -14,7 +14,8 @@ from utils import (
     get_session,
     delete_session,
     has_complete_profile,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    SESSION_EXPIRE_DAYS
 )
 
 router = APIRouter()
@@ -207,7 +208,7 @@ async def login(
         key="session_id",
         value=session_id,
         httponly=True,
-        max_age=30 * 24 * 60 * 60,  # 30 days
+        max_age=SESSION_EXPIRE_DAYS * 24 * 60 * 60,  # Convert days to seconds
         secure=False,  # Set to True in production with HTTPS
         samesite="lax"
     )
@@ -254,22 +255,22 @@ async def type_page(request: Request, company: str = None):
         return response
     
     username = session["username"]
-    # print(f"DEBUG: Type page - username: {username}, company param: {company}")
+    print(f"DEBUG: Type page - username: {username}, company param: {company}")
     
     # If no company specified, redirect to company selection
     if not company:
-        # print("DEBUG: No company specified, redirecting to /company")
+        print("DEBUG: No company specified, redirecting to /company")
         return RedirectResponse(url="/company")
     
     # Validate company parameter
     valid_companies = ["MMM", "UML", "Both"]
     if company not in valid_companies:
-        # print(f"DEBUG: Invalid company '{company}', redirecting to /company")
+        print(f"DEBUG: Invalid company '{company}', redirecting to /company")
         return RedirectResponse(url="/company")
     
     # Update user's last company selection
     update_result = update_user_selection(username, company=company)
-    # print(f"DEBUG: Company update result: {update_result}")
+    print(f"DEBUG: Company update result: {update_result}")
     
     # Show type selection page
     return templates.TemplateResponse(
@@ -296,17 +297,17 @@ async def save_type(request: Request, type: str = None):
         return response
     
     username = session["username"]
-    # print(f"DEBUG: Save type - username: {username}, type param: {type}")
+    print(f"DEBUG: Save type - username: {username}, type param: {type}")
     
     # Validate type parameter
     valid_types = ["Mail", "Drive", "Both"]
     if not type or type not in valid_types:
-        # print(f"DEBUG: Invalid type '{type}', redirecting to /company")
+        print(f"DEBUG: Invalid type '{type}', redirecting to /company")
         return RedirectResponse(url="/company")
     
     # Update user's last type selection
     update_result = update_user_selection(username, type_selection=type)
-    # print(f"DEBUG: Type update result: {update_result}")
+    print(f"DEBUG: Type update result: {update_result}")
     
     # Redirect to dashboard
     return RedirectResponse(url="/dashboard", status_code=303)
@@ -326,18 +327,18 @@ async def dashboard_page(request: Request, company: str = None):
         return response
     
     username = session["username"]
-    # print(f"DEBUG: Dashboard - username: {username}")
+    print(f"DEBUG: Dashboard - username: {username}")
     
     # Get user's stored selections
     selections = get_user_selections(username)
     stored_company = selections.get("last_company")
     stored_type = selections.get("last_type")
     
-    # print(f"DEBUG: Retrieved selections - company: {stored_company}, type: {stored_type}")
+    print(f"DEBUG: Retrieved selections - company: {stored_company}, type: {stored_type}")
     
     # If no stored selections, redirect to company selection
     if not stored_company:
-        # print("DEBUG: No stored company, redirecting to /company")
+        print("DEBUG: No stored company, redirecting to /company")
         return RedirectResponse(url="/company")
     
     if not stored_type:
