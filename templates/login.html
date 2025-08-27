@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Login - FastAPI Auth{% endblock %}
+
+{% block content %}
+<div class="card auth-card animate-slide-up">
+    <div class="card-body p-4">
+        <div class="text-center mb-4">
+            <h1 class="h4 fw-bold animate-fade-in">Welcome Back</h1>
+            <p class="text-muted animate-fade-in-delay">Sign in to your account</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger animate-shake" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+        </div>
+        {% endif %}
+
+        {% if message %}
+        <div class="alert alert-success animate-bounce" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ message }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/login" id="loginForm">
+            <div class="mb-3">
+                <label for="username_or_email" class="form-label">Username or Email</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="username_or_email" 
+                    name="username_or_email" 
+                    required
+                    placeholder="Enter username or email"
+                    value="{{ username_or_email or '' }}"
+                >
+                <div class="invalid-feedback" id="usernameOrEmailError"></div>
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="form-label">Password</label>
+                <div class="password-input-wrapper">
+                    <input 
+                        type="password" 
+                        class="form-control password-input" 
+                        id="password" 
+                        name="password" 
+                        required
+                        placeholder="Enter your password"
+                    >
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                        <i class="fas fa-eye" id="passwordEye"></i>
+                    </button>
+                </div>
+                <div class="invalid-feedback" id="passwordError"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-3 btn-animate">
+                <span class="btn-text">Sign In</span>
+                <div class="btn-spinner d-none">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </button>
+        </form>
+
+        <div class="text-center">
+            <p class="mb-0">Don't have an account? 
+                <a href="/signup" class="text-decoration-none fw-semibold">Sign up</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loginForm');
+    const usernameOrEmailInput = document.getElementById('username_or_email');
+    const passwordInput = document.getElementById('password');
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+
+        // Validate username or email
+        const usernameOrEmail = usernameOrEmailInput.value.trim();
+        if (!usernameOrEmail) {
+            showError(usernameOrEmailInput, 'Please enter your username or email');
+            isValid = false;
+        } else {
+            clearError(usernameOrEmailInput);
+        }
+
+        // Validate password
+        const password = passwordInput.value;
+        if (!password) {
+            showError(passwordInput, 'Please enter your password');
+            isValid = false;
+        } else {
+            clearError(passwordInput);
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+        } else {
+            // Show loading state
+            const button = form.querySelector('button[type="submit"]');
+            const btnText = button.querySelector('.btn-text');
+            const btnSpinner = button.querySelector('.btn-spinner');
+            
+            btnText.classList.add('d-none');
+            btnSpinner.classList.remove('d-none');
+            button.disabled = true;
+        }
+    });
+
+    // Clear validation on input
+    usernameOrEmailInput.addEventListener('input', function() {
+        if (this.value.trim()) {
+            clearError(this);
+        }
+    });
+
+    passwordInput.addEventListener('input', function() {
+        if (this.value) {
+            clearError(this);
+        }
+    });
+});
+
+function showError(input, message) {
+    input.classList.add('is-invalid');
+    const errorDiv = document.getElementById(input.id + 'Error');
+    errorDiv.textContent = message;
+}
+
+function clearError(input) {
+    input.classList.remove('is-invalid');
+    const errorDiv = document.getElementById(input.id + 'Error');
+    errorDiv.textContent = '';
+}
+
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const eye = document.getElementById(inputId + 'Eye');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        eye.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        eye.className = 'fas fa-eye';
+    }
+}
+</script>
+{% endblock %}

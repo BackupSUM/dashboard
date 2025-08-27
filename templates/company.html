@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Select Company - FastAPI Auth{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h1 class="fw-bold mb-3">
+            <i class="fas fa-building me-3"></i>Select Your Company
+        </h1>
+        <p class="lead text-muted">
+            Welcome, <strong class="text-primary">{{ username }}</strong>! Please choose which company you'd like to access.
+        </p>
+    </div>
+    
+    <!-- Company Cards -->
+    <div class="row justify-content-center g-4 text-center">
+        <!-- MMM Card -->
+        <div class="col-md-4 col-sm-10 d-flex justify-content-center">
+            <div class="card h-100 w-100" style="max-width: 22rem;">
+                <div class="card-body d-flex flex-column">
+                    <div class="mb-3">
+                        <i class="fas fa-heartbeat" style="font-size: 50px; color: #dc3545;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">MMM</h5>
+                    <h6 class="text-muted text-uppercase mb-3" style="font-size: 0.8rem;">DIAGNOSTICS CENTER</h6>
+                    <p class="card-text flex-grow-1">Access MMM diagnostic files and medical records</p>
+                    <a href="/type?company=MMM" class="btn text-white mt-auto" style="background-color: #dc3545;">Access MMM</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- UML Card -->
+        <div class="col-md-4 col-sm-10 d-flex justify-content-center">
+            <div class="card h-100 w-100" style="max-width: 22rem;">
+                <div class="card-body d-flex flex-column">
+                    <div class="mb-3">
+                        <i class="fas fa-microscope" style="font-size: 50px; color: #0d6efd;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">UML</h5>
+                    <h6 class="text-muted text-uppercase mb-3" style="font-size: 0.8rem;">MEDICAL LABORATORY</h6>
+                    <p class="card-text flex-grow-1">Access UML lab files and test results</p>
+                    <a href="/type?company=UML" class="btn text-white mt-auto" style="background-color: #0d6efd;">Access UML</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- BOTH Card -->
+        <div class="col-md-4 col-sm-10 d-flex justify-content-center">
+            <div class="card h-100 w-100" style="max-width: 22rem;">
+                <div class="card-body d-flex flex-column">
+                    <div class="mb-3">
+                        <i class="fas fa-hospital" style="font-size: 50px; color: #9b59b6;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">BOTH</h5>
+                    <h6 class="text-muted text-uppercase mb-3" style="font-size: 0.8rem;">COMBINED ACCESS</h6>
+                    <p class="card-text flex-grow-1">Access both MMM and UML systems together</p>
+                    <a href="/type?company=Both" class="btn text-white mt-auto" style="background-color: #9b59b6;">Access Both</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Logout Button -->
+    <div class="text-center mt-5">
+        <a href="/logout" class="btn btn-outline-secondary btn-lg px-4 py-2">
+            <i class="fas fa-sign-out-alt me-2"></i>Logout
+        </a>
+    </div>
+</div>
+
+<!-- Link to Company CSS -->
+<link href="/static/company.css" rel="stylesheet">
+{% endblock %}

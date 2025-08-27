@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - FastAPI Auth{% endblock %}
+
+{% block content %}
+<div class="card auth-card animate-slide-up">
+    <div class="card-body p-4">
+        <div class="text-center mb-4">
+            <h1 class="h4 fw-bold animate-fade-in">Create Account</h1>
+            <p class="text-muted animate-fade-in-delay">Sign up to get started</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger animate-shake" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/signup" id="signupForm">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="username" 
+                    name="username" 
+                    required
+                    placeholder="Enter your username"
+                    value="{{ username or '' }}"
+                    pattern="[a-zA-Z0-9_]{3,20}"
+                    title="Username must be 3-20 characters and contain only letters, numbers, and underscores"
+                >
+                <div class="invalid-feedback" id="usernameError"></div>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input 
+                    type="email" 
+                    class="form-control" 
+                    id="email" 
+                    name="email" 
+                    required
+                    placeholder="Enter your email"
+                    value="{{ email or '' }}"
+                >
+                <div class="invalid-feedback" id="emailError"></div>
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="form-label">Password</label>
+                <div class="password-input-wrapper">
+                    <input 
+                        type="password" 
+                        class="form-control password-input" 
+                        id="password" 
+                        name="password" 
+                        required
+                        placeholder="Enter your password"
+                        minlength="8"
+                    >
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                        <i class="fas fa-eye" id="passwordEye"></i>
+                    </button>
+                </div>
+                <div class="invalid-feedback" id="passwordError"></div>
+                <div class="password-requirements mt-2">
+                    <small class="text-muted">
+                        Password must contain:
+                        <ul class="mb-0 mt-1">
+                            <li id="req-length">At least 8 characters</li>
+                            <li id="req-letter">One letter</li>
+                            <li id="req-number">One number</li>
+                        </ul>
+                    </small>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-3 btn-animate">
+                <span class="btn-text">Create Account</span>
+                <div class="btn-spinner d-none">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </button>
+        </form>
+
+        <div class="text-center">
+            <p class="mb-0">Already have an account? 
+                <a href="/login" class="text-decoration-none fw-semibold">Sign in</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('signupForm');
+    const usernameInput = document.getElementById('username');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+
+    // Real-time password validation
+    passwordInput.addEventListener('input', function() {
+        validatePasswordRequirements(this.value);
+    });
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+
+        // Validate username
+        const username = usernameInput.value.trim();
+        if (username.length < 3 || username.length > 20) {
+            showError(usernameInput, 'Username must be 3-20 characters long');
+            isValid = false;
+        } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            showError(usernameInput, 'Username can only contain letters, numbers, and underscores');
+            isValid = false;
+        } else {
+            clearError(usernameInput);
+        }
+
+        // Validate email
+        const email = emailInput.value.trim();
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            showError(emailInput, 'Please enter a valid email address');
+            isValid = false;
+        } else {
+            clearError(emailInput);
+        }
+
+        // Validate password
+        const password = passwordInput.value;
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            showError(passwordInput, passwordError);
+            isValid = false;
+        } else {
+            clearError(passwordInput);
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+        } else {
+            // Show loading state
+            const button = form.querySelector('button[type="submit"]');
+            const btnText = button.querySelector('.btn-text');
+            const btnSpinner = button.querySelector('.btn-spinner');
+            
+            btnText.classList.add('d-none');
+            btnSpinner.classList.remove('d-none');
+            button.disabled = true;
+        }
+    });
+});
+
+function validatePassword(password) {
+    if (password.length < 8) {
+        return 'Password must be at least 8 characters long';
+    }
+    if (!/[A-Za-z]/.test(password)) {
+        return 'Password must contain at least one letter';
+    }
+    if (!/[0-9]/.test(password)) {
+        return 'Password must contain at least one number';
+    }
+    return '';
+}
+
+function validatePasswordRequirements(password) {
+    const requirements = {
+        'req-length': password.length >= 8,
+        'req-letter': /[A-Za-z]/.test(password),
+        'req-number': /[0-9]/.test(password)
+    };
+
+    Object.keys(requirements).forEach(reqId => {
+        const element = document.getElementById(reqId);
+        if (requirements[reqId]) {
+            element.classList.add('text-success');
+            element.classList.remove('text-muted');
+        } else {
+            element.classList.add('text-muted');
+            element.classList.remove('text-success');
+        }
+    });
+}
+
+function showError(input, message) {
+    input.classList.add('is-invalid');
+    const errorDiv = document.getElementById(input.id + 'Error');
+    errorDiv.textContent = message;
+}
+
+function clearError(input) {
+    input.classList.remove('is-invalid');
+    const errorDiv = document.getElementById(input.id + 'Error');
+    errorDiv.textContent = '';
+}
+
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const eye = document.getElementById(inputId + 'Eye');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        eye.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        eye.className = 'fas fa-eye';
+    }
+}
+</script>
+{% endblock %}
