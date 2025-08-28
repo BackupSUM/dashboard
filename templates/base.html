@@ -59,8 +59,10 @@
         function updateThemeIcon(theme) {
             const icon = document.getElementById('themeIcon');
             if (theme === 'light') {
+                // In light mode, show moon (grey/white)
                 icon.className = 'fas fa-moon';
             } else {
+                // In dark mode, show sun (yellow/orange)
                 icon.className = 'fas fa-sun';
             }
         }

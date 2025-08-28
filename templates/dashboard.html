@@ -2,6 +2,41 @@
 {% block title %}Dashboard - FastAPI Auth{% endblock %}
 {% block content %}
 
+<!-- Header Section -->
+<div class="dashboard-header mb-4">
+    <div class="text-center">
+        {% if last_login %}
+            <h3 class="fw-bold mb-2" style="color: var(--text-color);">Welcome back, {{ username }}!</h3>
+        {% else %}
+            <h3 class="fw-bold mb-2" style="color: var(--text-color);">Welcome, {{ username }}!</h3>
+        {% endif %}
+        <p class="text-muted mb-2">Find your records or files</p>
+        <p class="text-muted small mb-3">
+            <strong>Company:</strong> {{ company }} | 
+            <strong>Type:</strong> {{ type }}
+            {% if not database_available %}
+                <span class="badge bg-warning ms-2">Database Offline</span>
+            {% endif %}
+        </p>
+        
+        <!-- Navigation Buttons -->
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="/company" class="btn btn-outline-primary">
+                <i class="fas fa-building me-2"></i>Change Company
+            </a>
+            <a href="/type?company={{ company }}" class="btn btn-outline-primary">
+                <i class="fas fa-database me-2"></i>Change Type
+            </a>
+            <button id="testConnection" class="btn btn-outline-info">
+                <i class="fas fa-link me-2"></i>Test Connection
+            </button>
+            <a href="/logout" class="btn btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </a>
+        </div>
+    </div>
+</div>
+
 <!-- Dashboard Container -->
 <div class="card shadow-lg p-4">
     <h2 class="text-center mb-4">Dashboard</h2>
@@ -9,36 +44,33 @@
     <!-- Search Bar -->
     <form id="searchForm" class="text-center">
         <div class="mb-3">
-            <input type="text" class="form-control form-control-lg" placeholder="Search records, names, or keywords"
-                name="query">
+            <input type="text" class="form-control form-control-lg" 
+                   placeholder="Search records, names, or keywords"
+                   name="query" id="searchQuery">
         </div>
 
         <!-- Filter Toggle Button -->
         <div class="text-center mb-3">
             <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse"
-                data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
-                <i class="fas fa-filter me-2"></i> Filters
+                    data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
+                <i class="fas fa-filter me-2"></i> Advanced Filters
             </button>
         </div>
 
         <!-- Collapsible Filters Section -->
         <div class="collapse" id="filterSection">
             <div class="card card-body mb-3">
+                <!-- Row 1: Company, Category, Account -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <input type="date" class="form-control" name="date" placeholder="Date">
+                        <label class="form-label" for="filterCompany">Company</label>
+                        <select class="form-select" name="company" id="filterCompany" disabled>
+                            <option value="">All Companies</option>
+                        </select>
                     </div>
                     <div class="col-md-4">
-                        <input type="date" class="form-control" name="dob" placeholder="Date of Birth">
-                    </div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" name="company" placeholder="Company">
-                    </div>
-                </div>
-
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <select class="form-select" name="category">
+                        <label class="form-label" for="filterCategory">Category</label>
+                        <select class="form-select" name="category" id="filterCategory" disabled>
                             <option value="">Select Category</option>
                             <option>Billing and Revenue Management</option>
                             <option>Financial Management</option>
@@ -49,21 +81,34 @@
                             <option>Others</option>
                         </select>
                     </div>
-                    <div class="col-md-6">
-                        <select class="form-select" name="account">
-                            <option value="">Select Account</option>
-                            <option>backupusdai@gmail.com</option>
-                            <option>dennis@mmmdiaghnostic.com</option>
+                    <div class="col-md-4">
+                        <label class="form-label" for="filterAccount">Account</label>
+                        <select class="form-select" name="account" id="filterAccount" disabled>
+                            <option value="">All Accounts</option>
                         </select>
+                    </div>
+                </div>
+
+                <!-- Row 2: DOS/Date, DOB -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="filterDate">Date of Service (DOS)</label>
+                        <input type="date" class="form-control" name="date" id="filterDate" placeholder="dd/mm/yyyy">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="filterDob">Date of Birth (DOB)</label>
+                        <input type="date" class="form-control" name="dob" id="filterDob" placeholder="dd/mm/yyyy">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Big Search Button -->
+        <!-- Search Button -->
         <div class="text-center mt-4">
-            <button type="submit" class="btn btn-primary btn-lg px-5 py-3 shadow">
-                <i class="fas fa-search me-2"></i> Search
+            <button type="submit" class="btn btn-primary btn-lg px-5 py-3 shadow" id="searchButton"
+                    {% if not database_available %}disabled title="Database is offline"{% endif %}>
+                <i class="fas fa-search me-2"></i> 
+                <span id="searchButtonText">Search</span>
             </button>
         </div>
     </form>
@@ -71,77 +116,95 @@
 
 <!-- Modal for Search Results -->
 <div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered"> <!-- full width modal -->
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title text-center w-100" id="resultModalLabel">Search Result</h5>
+                <h5 class="modal-title text-center w-100" id="resultModalLabel">
+                    Search Results 
+                    <span id="resultCount" class="badge bg-primary ms-2">0</span>
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Full-width table -->
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Account</th>
-                                <th>Filename</th>
-                                <th>Drive Link</th>
-                                <th>Name</th>
-                                <th>DOS</th>
-                                <th>DOB</th>
-                                <th>Email</th>
-                                <th>Company</th>
-                                <th>Category</th>
-                                <th>Reason</th>
-                                <th>View</th>
-                                <th>Download</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>backupusdai@gmail.com</td>
-                                <td>report1.pdf</td>
-                                <td><a href="https://example.com/report1.pdf" target="_blank">Link</a></td>
-                                <td>John Doe</td>
-                                <td>2025-08-25</td>
-                                <td>1990-05-12</td>
-                                <td>johndoe@gmail.com</td>
-                                <td>MMM Diagnostics</td>
-                                <td>Billing and Revenue Management</td>
-                                <td>Verification Pending</td>
-                                <!-- View PDF button -->
-                                <td class="text-center">
-                                    <a href="https://example.com/report1.pdf" target="_blank"
-                                        class="btn btn-sm btn-outline-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </td>
-                                <!-- Download PDF button -->
-                                <td class="text-center">
-                                    <a href="https://example.com/report1.pdf" download
-                                        class="btn btn-sm btn-outline-success">
-                                        <i class="fas fa-file-download"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Loading indicator -->
+                <div id="loadingIndicator" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Searching records...</p>
+                </div>
+
+                <!-- Error message -->
+                <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+
+                <!-- Results containers (Drive first, then Mail) -->
+                <div id="resultsContainer" style="display: none;">
+                    <div id="driveResults" class="table-responsive mb-4" style="display: none;">
+                        <h6 class="mb-2">Drive Results</h6>
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Account</th>
+                                    <th>Filename</th>
+                                    <th>Name</th>
+                                    <th>DOS/Date</th>
+                                    <th>DOB</th>
+                                    <th>Email</th>
+                                    <th>Company</th>
+                                    <th>Category</th>
+                                    <th>Reason</th>
+                                    <th>Drive Link</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="driveResultsBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="mailResults" class="table-responsive" style="display: none;">
+                        <h6 class="mb-2">Mail Results</h6>
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Account</th>
+                                    <th>Date</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Subject</th>
+                                    <th>Attachment</th>
+                                    <th>Category</th>
+                                    <th>Reason</th>
+                                    <th>Name</th>
+                                    <th>DOS/Date</th>
+                                    <th>DOB</th>
+                                    <th>Email</th>
+                                    <th>Company</th>
+                                    <th>Attachment Link</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mailResultsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- No results message -->
+                <div id="noResultsMessage" class="alert alert-info text-center" style="display: none;">
+                    <h5>No Results Found</h5>
+                    <p>Try adjusting your search terms or filters.</p>
                 </div>
             </div>
             <div class="modal-footer justify-content-between">
                 <!-- Export Dropdown -->
                 <div class="dropdown">
                     <button class="btn btn-outline-primary dropdown-toggle" type="button" id="exportDropdown"
-                        data-bs-toggle="dropdown" aria-expanded="false">
+                            data-bs-toggle="dropdown" aria-expanded="false" disabled>
                         <i class="fas fa-file-export me-2"></i> Export As
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf text-danger me-2"></i> PDF</a>
-                        </li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel text-success me-2"></i>
-                                Excel</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-file-csv text-secondary me-2"></i>
-                                CSV</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportResults('csv')">
+                            <i class="fas fa-file-csv text-success me-2"></i> CSV</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportResults('xlsx')">
+                            <i class="fas fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
                     </ul>
                 </div>
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -150,16 +213,388 @@
     </div>
 </div>
 
+<!-- Connection Status Modal -->
+<div class="modal fade" id="connectionModal" tabindex="-1" aria-labelledby="connectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="connectionModalLabel">Database Connection Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="connectionModalBody">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Testing...</span>
+                    </div>
+                    <p class="mt-2">Testing database connection...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Link to Dashboard CSS -->
 <link href="/static/dashboard.css" rel="stylesheet">
 
-<!-- Temporary Script for Modal Trigger -->
 <script>
-    document.getElementById('searchForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        var modal = new bootstrap.Modal(document.getElementById('resultModal'));
-        modal.show();
+let currentSearchResults = null;
+
+// Search form handler
+document.getElementById('searchForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    performSearch();
+});
+
+// Test connection handler
+document.getElementById('testConnection').addEventListener('click', function() {
+    testDatabaseConnection();
+    loadFilterOptions();
+});
+
+// Load filter options on page load
+loadFilterOptions();
+
+function performSearch() {
+    const form = document.getElementById('searchForm');
+    const formData = new FormData(form);
+    
+    // Show modal and loading
+    const modal = new bootstrap.Modal(document.getElementById('resultModal'));
+    modal.show();
+    
+    showLoading(true);
+    hideResults();
+    hideError();
+    
+    // Update search button
+    const searchButton = document.getElementById('searchButton');
+    const searchButtonText = document.getElementById('searchButtonText');
+    // Wrap templated value in a string so editors parse this as valid JS.
+    // Then parse to get the real boolean at runtime.
+    const isDbAvailable = JSON.parse('{{ (database_available | default(false)) | tojson }}');
+    
+    searchButton.disabled = true;
+    searchButtonText.textContent = 'Searching...';
+    
+    fetch('/api/search', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentSearchResults = data;
+            displayResults(data.results);
+            document.getElementById('resultCount').textContent = data.total_count;
+            
+            // Enable export if we have results
+            if (data.results.length > 0) {
+                document.getElementById('exportDropdown').disabled = false;
+            }
+        } else {
+            showError(data.message || 'Search failed');
+        }
+    })
+    .catch(error => {
+        console.error('Search error:', error);
+        showError('Network error occurred during search');
+    })
+    .finally(() => {
+        showLoading(false);
+        // Reset search button
+        searchButton.disabled = !isDbAvailable;
+        searchButtonText.textContent = 'Search';
     });
+}
+
+function displayResults(results) {
+    const driveBody = document.getElementById('driveResultsBody');
+    const mailBody = document.getElementById('mailResultsBody');
+    driveBody.innerHTML = '';
+    mailBody.innerHTML = '';
+    
+    if (results.length === 0) {
+        showNoResults();
+        return;
+    }
+    
+    function formatCell(value) {
+        if (value === null || value === undefined) return 'N/A';
+        const s = String(value).trim();
+        return s === '' ? 'N/A' : escapeHtml(s);
+    }
+
+    function truncate(value, n = 30) {
+        if (value === null || value === undefined) return 'N/A';
+        const s = String(value);
+        if (s.trim() === '') return 'N/A';
+        return s.length > n ? escapeHtml(s.slice(0, n)) + '…' : escapeHtml(s);
+    }
+
+    results.forEach(result => {
+        const row = document.createElement('tr');
+        
+        const viewButton = result.view_url ? 
+            `<a href="${escapeHtml(result.view_url)}" target="_blank" class="btn btn-sm btn-outline-info me-1" title="View">
+                <i class="fas fa-eye"></i>
+            </a>` : '';
+            
+        const downloadButton = result.download_url ? 
+            `<a href="${escapeHtml(result.download_url)}" class="btn btn-sm btn-outline-success" title="Download">
+                <i class="fas fa-download"></i>
+            </a>` : '';
+        const raw = result.raw_record || {};
+        const isMail = !!(raw['Subject'] || raw['FROM'] || raw['Attachment Link'] || raw['ATTACHMENT LINK']);
+
+        if (!isMail) {
+            // Drive row
+            row.innerHTML = `
+                <td title="${escapeHtml(result.account)}">${truncate(result.account)}</td>
+                <td title="${escapeHtml(result.filename)}">${truncate(result.filename)}</td>
+                <td title="${escapeHtml(result.name)}">${truncate(result.name)}</td>
+                <td title="${escapeHtml(result.dos)}">${truncate(result.dos)}</td>
+                <td title="${escapeHtml(result.dob)}">${truncate(result.dob)}</td>
+                <td title="${escapeHtml(result.email)}">${truncate(result.email)}</td>
+                <td title="${escapeHtml(result.company)}">${truncate(result.company)}</td>
+                <td title="${escapeHtml(result.category)}">${truncate(result.category)}</td>
+                <td title="${escapeHtml(result.reason)}">${truncate(result.reason)}</td>
+                <td>${result.view_url ? `<a href="${escapeHtml(result.view_url)}" target="_blank">Open</a>` : 'N/A'}</td>
+                <td class="text-center">${viewButton}${downloadButton}</td>
+            `;
+            driveBody.appendChild(row);
+        } else {
+            // Mail row
+            const dateVal = raw['DATE'] || raw['Date'] || '';
+            const fromVal = raw['FROM'] || raw['From'] || '';
+            const toVal = raw['TO'] || raw['To'] || '';
+            const subjectVal = raw['SUBJECT'] || raw['Subject'] || '';
+            const attachName = raw['ATTACHMENT FILENAME'] || raw['Attachment Filename'] || '';
+            const attachLink = raw['ATTACHMENT LINK'] || raw['Attachment Link'] || result.view_url || '';
+            row.innerHTML = `
+                <td title="${escapeHtml(result.account)}">${truncate(result.account)}</td>
+                <td title="${escapeHtml(dateVal)}">${truncate(dateVal)}</td>
+                <td title="${escapeHtml(fromVal)}">${truncate(fromVal)}</td>
+                <td title="${escapeHtml(toVal)}">${truncate(toVal)}</td>
+                <td title="${escapeHtml(subjectVal)}">${truncate(subjectVal)}</td>
+                <td title="${escapeHtml(attachName)}">${truncate(attachName)}</td>
+                <td title="${escapeHtml(result.category)}">${truncate(result.category)}</td>
+                <td title="${escapeHtml(result.reason)}">${truncate(result.reason)}</td>
+                <td title="${escapeHtml(result.name)}">${truncate(result.name)}</td>
+                <td title="${escapeHtml(result.dos)}">${truncate(result.dos)}</td>
+                <td title="${escapeHtml(result.dob)}">${truncate(result.dob)}</td>
+                <td title="${escapeHtml(result.email)}">${truncate(result.email)}</td>
+                <td title="${escapeHtml(result.company)}">${truncate(result.company)}</td>
+                <td>${attachLink ? `<a href="${escapeHtml(attachLink)}" target="_blank">Open</a>` : 'N/A'}</td>
+                <td class="text-center">${viewButton}${downloadButton}</td>
+            `;
+            mailBody.appendChild(row);
+        }
+    });
+    
+    // Toggle containers
+    const hasDrive = driveBody.children.length > 0;
+    const hasMail = mailBody.children.length > 0;
+    document.getElementById('driveResults').style.display = hasDrive ? 'block' : 'none';
+    document.getElementById('mailResults').style.display = hasMail ? 'block' : 'none';
+    showResults();
+}
+
+function showLoading(show) {
+    document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
+}
+
+function showResults() {
+    document.getElementById('resultsContainer').style.display = 'block';
+    document.getElementById('noResultsMessage').style.display = 'none';
+    document.getElementById('errorMessage').style.display = 'none';
+}
+
+function showNoResults() {
+    document.getElementById('resultsContainer').style.display = 'none';
+    document.getElementById('noResultsMessage').style.display = 'block';
+    document.getElementById('errorMessage').style.display = 'none';
+}
+
+function hideResults() {
+    document.getElementById('resultsContainer').style.display = 'none';
+    document.getElementById('noResultsMessage').style.display = 'none';
+}
+
+function showError(message) {
+    const errorDiv = document.getElementById('errorMessage');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+    document.getElementById('resultsContainer').style.display = 'none';
+    document.getElementById('noResultsMessage').style.display = 'none';
+}
+
+function hideError() {
+    document.getElementById('errorMessage').style.display = 'none';
+}
+
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+async function loadFilterOptions() {
+    try {
+        const res = await fetch('/api/filter-options');
+        const data = await res.json();
+        if (!data.success) return;
+        const { accounts = [], companies = [], categories = [] } = data.options || {};
+
+        const accSel = document.getElementById('filterAccount');
+        const compSel = document.getElementById('filterCompany');
+        const catSel = document.getElementById('filterCategory');
+
+        function setOptions(selectEl, list, placeholder) {
+            selectEl.innerHTML = '';
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = placeholder;
+            selectEl.appendChild(opt);
+            list.forEach(v => {
+                const o = document.createElement('option');
+                o.value = v;
+                o.textContent = v;
+                selectEl.appendChild(o);
+            });
+            selectEl.disabled = false;
+        }
+
+        setOptions(accSel, accounts, 'All Accounts');
+        setOptions(compSel, companies, 'All Companies');
+        if (categories && categories.length && catSel) {
+            setOptions(catSel, categories, 'Select Category');
+        }
+    } catch (e) {
+        console.error('Failed to load filter options', e);
+    }
+}
+
+function exportResults(format) {
+    if (!currentSearchResults || !currentSearchResults.results || currentSearchResults.results.length === 0) {
+        alert('No results to export');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('format', format);
+    formData.append('search_data', JSON.stringify(currentSearchResults));
+    
+    fetch('/api/export', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        }
+        throw new Error('Export failed');
+    })
+    .then(blob => {
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `search_results.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    })
+    .catch(error => {
+        console.error('Export error:', error);
+        alert('Failed to export results');
+    });
+}
+
+function testDatabaseConnection() {
+    const modal = new bootstrap.Modal(document.getElementById('connectionModal'));
+    const modalBody = document.getElementById('connectionModalBody');
+    
+    // Reset modal content
+    modalBody.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Testing...</span>
+            </div>
+            <p class="mt-2">Testing database connection...</p>
+        </div>
+    `;
+    
+    modal.show();
+    
+    fetch('/api/test-connection')
+    .then(response => response.json())
+    .then(data => {
+        let content = '';
+        if (data.success) {
+            const fieldsHtml = data.sample_fields.length > 0 ? 
+                data.sample_fields.filter(f => !f.startsWith('_')).map(field => 
+                    `<span class="badge bg-secondary">${escapeHtml(field)}</span>`
+                ).join('') : '';
+                
+            content = `
+                <div class="alert alert-success">
+                    <h5><i class="fas fa-check-circle me-2"></i>Connection Successful</h5>
+                    <p><strong>Company:</strong> ${escapeHtml(data.user_selections.company)}</p>
+                    <p><strong>Type:</strong> ${escapeHtml(data.user_selections.type)}</p>
+                    <p><strong>Active Spreadsheets:</strong> ${data.active_spreadsheets}</p>
+                    <p><strong>Total Records:</strong> ${data.total_records}</p>
+                    ${fieldsHtml ? `
+                        <hr>
+                        <p><strong>Available Fields:</strong></p>
+                        <div class="d-flex flex-wrap gap-1">
+                            ${fieldsHtml}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        } else {
+            content = `
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Connection Failed</h5>
+                    <p>${escapeHtml(data.message)}</p>
+                    ${data.error ? `<small class="text-muted">Error: ${escapeHtml(data.error)}</small>` : ''}
+                </div>
+            `;
+        }
+        modalBody.innerHTML = content;
+    })
+    .catch(error => {
+        console.error('Connection test error:', error);
+        modalBody.innerHTML = `
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-exclamation-triangle me-2"></i>Connection Test Failed</h5>
+                <p>Unable to test database connection</p>
+                <small class="text-muted">Error: ${escapeHtml(error.message)}</small>
+            </div>
+        `;
+    });
+}
+
+// Auto-focus search input when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('searchQuery').focus();
+});
+
+// Clear results when modal is hidden
+document.getElementById('resultModal').addEventListener('hidden.bs.modal', function () {
+    currentSearchResults = null;
+    document.getElementById('exportDropdown').disabled = true;
+    document.getElementById('resultCount').textContent = '0';
+});
 </script>
 
 {% endblock %}

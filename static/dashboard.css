@@ -1,8 +1,68 @@
 /* Dashboard Animations and Styling */
 
+/* Header Section */
+.dashboard-header {
+    animation: fadeInDown 0.6s ease-out;
+}
+
+.dashboard-header h3 {
+    color: var(--text-color);
+    animation: slideInUp 0.6s ease-out 0.2s both;
+}
+
+.dashboard-header p {
+    color: var(--muted-color);
+    animation: slideInUp 0.6s ease-out 0.4s both;
+}
+
+.dashboard-header .d-flex {
+    animation: slideInUp 0.6s ease-out 0.6s both;
+}
+
+.dashboard-header .btn {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    min-width: 140px;
+}
+
+.dashboard-header .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-header .btn-outline-primary {
+    border-color: var(--primary-color, #0d6efd);
+    color: var(--primary-color, #0d6efd);
+}
+
+.dashboard-header .btn-outline-primary:hover {
+    background-color: var(--primary-color, #0d6efd);
+    border-color: var(--primary-color, #0d6efd);
+    color: white;
+}
+
+.dashboard-header .btn-outline-danger {
+    border-color: var(--danger-color, #dc3545);
+    color: var(--danger-color, #dc3545);
+}
+
+.dashboard-header .btn-outline-danger:hover {
+    background-color: var(--danger-color, #dc3545);
+    border-color: var(--danger-color, #dc3545);
+    color: white;
+}
+
 /* Page entrance animation */
 .card {
-    animation: slideInUp 0.6s ease-out;
+    animation: slideInUp 0.6s ease-out 0.4s both;
+    background: var(--card-bg);
+    border: 1px solid var(--input-border);
+}
+
+/* Dashboard title */
+.card h2 {
+    color: var(--text-color);
+    animation: fadeIn 0.8s ease-out 0.6s both;
 }
 
 /* Search bar animations */
@@ -168,6 +228,7 @@
 .dropdown-item:hover {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     transform: translateX(5px);
+    text-decoration: underline;
 }
 
 /* Link animations */
@@ -214,6 +275,39 @@ a:hover {
 }
 
 /* Keyframe Animations */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 @keyframes slideInUp {
     from {
         opacity: 0;
@@ -301,6 +395,54 @@ a:hover {
     border-color: var(--input-border, #475569);
 }
 
+[data-theme="dark"] .card h2 {
+    color: var(--text-color, #f1f5f9);
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background: var(--input-bg, #334155);
+    border-color: var(--input-border, #475569);
+    color: var(--input-text, #f1f5f9);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--muted-color, #94a3b8);
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    border-color: var(--input-border, #475569);
+    color: var(--text-color, #f1f5f9);
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    background-color: var(--input-border, #475569);
+    border-color: var(--input-border, #475569);
+    color: var(--text-color, #f1f5f9);
+}
+
+[data-theme="dark"] .btn-outline-primary {
+    border-color: var(--primary-color, #3b82f6);
+    color: var(--primary-color, #3b82f6);
+}
+
+[data-theme="dark"] .btn-outline-primary:hover {
+    background-color: var(--primary-color, #3b82f6);
+    border-color: var(--primary-color, #3b82f6);
+    color: white;
+}
+
+[data-theme="dark"] .btn-outline-danger {
+    border-color: var(--danger-color, #f87171);
+    color: var(--danger-color, #f87171);
+}
+
+[data-theme="dark"] .btn-outline-danger:hover {
+    background-color: var(--danger-color, #f87171);
+    border-color: var(--danger-color, #f87171);
+    color: white;
+}
+
 [data-theme="dark"] .modal-content {
     background: var(--card-bg, #1e293b);
     color: var(--text-color, #f1f5f9);
@@ -311,6 +453,20 @@ a:hover {
 }
 
 [data-theme="dark"] .table th {
+    background: var(--input-border, #475569);
+    color: var(--text-color, #f1f5f9);
+}
+
+[data-theme="dark"] .dropdown-menu {
+    background: var(--card-bg, #1e293b);
+    border-color: var(--input-border, #475569);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--text-color, #f1f5f9);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
     background: var(--input-border, #475569);
     color: var(--text-color, #f1f5f9);
 }

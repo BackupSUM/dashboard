@@ -265,3 +265,43 @@ def has_complete_profile(username: str) -> bool:
     
     return (user.get("last_company") is not None and 
             user.get("last_type") is not None)
+
+def check_database_connection() -> bool:
+    """Check if database connection is available."""
+    try:
+        from DB.temp_db import get_database
+        db = get_database()
+        return True
+    except ImportError:
+        return False
+    except Exception:
+        return False
+
+def get_database_status() -> Dict:
+    """Get database status information."""
+    try:
+        from DB.temp_db import get_database
+        db = get_database()
+        return {
+            "available": True,
+            "message": "Database connection active",
+            "credentials_file": "DB\credentials.json"
+        }
+    except ImportError:
+        return {
+            "available": False,
+            "message": "Database module not installed",
+            "error": "Missing DB.temp_db module"
+        }
+    except FileNotFoundError as e:
+        return {
+            "available": False,
+            "message": "Credentials file not found",
+            "error": str(e)
+        }
+    except Exception as e:
+        return {
+            "available": False,
+            "message": "Database connection failed",
+            "error": str(e)
+        }

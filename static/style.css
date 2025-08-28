@@ -73,6 +73,17 @@ body {
     color: var(--primary-color);
 }
 
+/* Colorize theme icons by current mode */
+[data-theme="light"] #themeIcon.fa-moon {
+    color: #e5e7eb !important; /* gray-200 */
+    text-shadow: 0 0 6px rgba(229, 231, 235, 0.35);
+}
+
+[data-theme="dark"] #themeIcon.fa-sun {
+    color: #fbbf24 !important; /* amber-400 for better contrast */
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.55);
+}
+
 /* Auth Card Styles */
 .auth-card {
     max-width: 400px;
