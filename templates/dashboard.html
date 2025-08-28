@@ -1,63 +1,165 @@
 {% extends "base.html" %}
-
 {% block title %}Dashboard - FastAPI Auth{% endblock %}
-
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card dashboard-card animate-slide-up">
-                <div class="card-body text-center p-5">
-                    <div class="dashboard-welcome">
-                        <h1 class="h2 fw-bold mb-3 animate-fade-in">
-                            <i class="fas fa-tachometer-alt me-3" style="color: var(--primary-color);"></i>
-                            Dashboard
-                        </h1>
-                        
-                        <p class="lead mb-4 animate-fade-in-delay">
-                            Hello, <strong style="color: var(--accent-color);">{{ username }}</strong>!
-                        </p>
 
-                        <div class="row text-start mb-4">
-                            <div class="col-md-6 mb-3">
-                                <div class="p-3 rounded" style="background: rgba(24, 188, 156, 0.1); border-left: 4px solid var(--accent-color);">
-                                    <h6 class="fw-semibold mb-2">
-                                        <i class="fas fa-building me-2"></i>Your Company
-                                    </h6>
-                                    <strong>{{ company }}</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="p-3 rounded" style="background: rgba(44, 62, 80, 0.1); border-left: 4px solid var(--primary-color);">
-                                    <h6 class="fw-semibold mb-2">
-                                        <i class="fas fa-database me-2"></i>Your Type
-                                    </h6>
-                                    <strong>{{ type }}</strong>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="d-flex gap-3 justify-content-center flex-wrap">
-                            <a href="/type?company={{ company }}" class="btn btn-outline-primary">
-                                <i class="fas fa-database me-2"></i>Change Type
-                            </a>
-                            <a href="/company" class="btn btn-outline-secondary">
-                                <i class="fas fa-building me-2"></i>Change Company
-                            </a>
-                            <a href="/logout" class="btn btn-outline-danger">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a>
-                        </div>
+<!-- Dashboard Container -->
+<div class="card shadow-lg p-4">
+    <h2 class="text-center mb-4">Dashboard</h2>
+
+    <!-- Search Bar -->
+    <form id="searchForm" class="text-center">
+        <div class="mb-3">
+            <input type="text" class="form-control form-control-lg" placeholder="Search records, names, or keywords"
+                name="query">
+        </div>
+
+        <!-- Filter Toggle Button -->
+        <div class="text-center mb-3">
+            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse"
+                data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
+                <i class="fas fa-filter me-2"></i> Filters
+            </button>
+        </div>
+
+        <!-- Collapsible Filters Section -->
+        <div class="collapse" id="filterSection">
+            <div class="card card-body mb-3">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <input type="date" class="form-control" name="date" placeholder="Date">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="date" class="form-control" name="dob" placeholder="Date of Birth">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="company" placeholder="Company">
                     </div>
                 </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <select class="form-select" name="category">
+                            <option value="">Select Category</option>
+                            <option>Billing and Revenue Management</option>
+                            <option>Financial Management</option>
+                            <option>Patient Care & Records</option>
+                            <option>Supply & Vendor Management</option>
+                            <option>Operations & Administration</option>
+                            <option>Marketing & Communication</option>
+                            <option>Others</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <select class="form-select" name="account">
+                            <option value="">Select Account</option>
+                            <option>backupusdai@gmail.com</option>
+                            <option>dennis@mmmdiaghnostic.com</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Big Search Button -->
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg px-5 py-3 shadow">
+                <i class="fas fa-search me-2"></i> Search
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal for Search Results -->
+<div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered"> <!-- full width modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-center w-100" id="resultModalLabel">Search Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Full-width table -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Account</th>
+                                <th>Filename</th>
+                                <th>Drive Link</th>
+                                <th>Name</th>
+                                <th>DOS</th>
+                                <th>DOB</th>
+                                <th>Email</th>
+                                <th>Company</th>
+                                <th>Category</th>
+                                <th>Reason</th>
+                                <th>View</th>
+                                <th>Download</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>backupusdai@gmail.com</td>
+                                <td>report1.pdf</td>
+                                <td><a href="https://example.com/report1.pdf" target="_blank">Link</a></td>
+                                <td>John Doe</td>
+                                <td>2025-08-25</td>
+                                <td>1990-05-12</td>
+                                <td>johndoe@gmail.com</td>
+                                <td>MMM Diagnostics</td>
+                                <td>Billing and Revenue Management</td>
+                                <td>Verification Pending</td>
+                                <!-- View PDF button -->
+                                <td class="text-center">
+                                    <a href="https://example.com/report1.pdf" target="_blank"
+                                        class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                                <!-- Download PDF button -->
+                                <td class="text-center">
+                                    <a href="https://example.com/report1.pdf" download
+                                        class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-file-download"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <!-- Export Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="exportDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-export me-2"></i> Export As
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf text-danger me-2"></i> PDF</a>
+                        </li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel text-success me-2"></i>
+                                Excel</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-file-csv text-secondary me-2"></i>
+                                CSV</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Link to Dashboard CSS -->
+<link href="/static/dashboard.css" rel="stylesheet">
+
+<!-- Temporary Script for Modal Trigger -->
 <script>
-function showComingSoon() {
-    alert('This feature is coming soon!');
-}
+    document.getElementById('searchForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var modal = new bootstrap.Modal(document.getElementById('resultModal'));
+        modal.show();
+    });
 </script>
+
 {% endblock %}
